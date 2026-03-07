@@ -1,6 +1,6 @@
 # 🚚 Logistics AI Analytics SQL Agent
 
-An AI-powered logistics analytics platform using **LangChain + Groq (Llama 3.3 70B) + PostgreSQL + Streamlit**. The system converts natural language questions into optimized SQL queries, executes them against a PostgreSQL database containing supply chain data (orders, deliveries, routes, customers, etc.), and generates insights and visualizations.
+An AI-powered logistics analytics platform using **LangChain + Groq (Llama 3.3 70B) + PostgreSQL + Streamlit**. The system converts natural language questions into optimized SQL queries, executes them against a PostgreSQL database containing supply chain data (orders, deliveries, customers, products, shipping modes, and regions).
 
 ## 📊 Dataset
 **DataCo Smart Supply Chain Dataset** — 180,000+ supply chain records covering orders, deliveries, customers, products, shipping modes, and regions.
@@ -29,10 +29,10 @@ flowchart TD
 ```
 
 ### Core Components
-1. **Frontend (Streamlit)**: Interactive UI for answering natural language questions, displaying query history, interactive charts, and business insights. Also features an XGBoost-powered predictive model for delivery delays.
-2. **Backend API (FastAPI)**: REST endpoints for querying, model training, and predictions.
-3. **Core SQL Agent (LangChain + Groq)**: Context-aware agent running on Llama-3.3-70b. It generates highly optimized, single-shot PostgreSQL analytics queries (using strict aggregations, proper JOINs, limits, window functions, and early filtering) without any intermediate exploratory queries.
-4. **Data Layer (PostgreSQL)**: Fully normalized relational database with tables for products, orders, deliveries, customers, routes, drivers, and warehouses.
+1. **Frontend (Streamlit)**: Modern AI dashboard UI. Features live metric cards, dynamic query input, vertical results flow (SQL -> Table -> Chart -> Insight), and an XGBoost-powered predictive model for delivery delays.
+2. **Backend API (FastAPI)**: REST endpoints for querying, health checks, global dashboard metrics, and ML predictions.
+3. **Core SQL Agent (LangChain + Groq)**: Context-aware agent running on Llama-3.3-70b. It generates highly optimized, single-shot PostgreSQL analytics queries.
+4. **Data Layer (PostgreSQL)**: Normalized database with tables for products, orders, deliveries, customers, routes, and drivers.
 
 ## 🚀 Quick Start
 
@@ -52,23 +52,23 @@ DATABASE_URL=postgresql://postgres:password@localhost:5432/logistics_db
 Ensure PostgreSQL is running locally, then create tables and ingest data:
 ```powershell
 # Create tables
-python -m database.create_tables
+python -m backend.database.create_tables
 
 # Ingest DataCo CSV data
-python -m database.ingest_data
+python -m backend.database.ingest_data
 ```
 
 ### 4. Start Services
 Start the **FastAPI Backend**:
 ```powershell
 # Opens on port 8000
-uvicorn main:app --reload --port 8000
+uvicorn backend.main:app --reload --port 8000
 ```
 
 Start the **Streamlit Frontend** (in a new terminal):
 ```powershell
-# Opens on port 8501
-streamlit run app.py
+# Opens on default port 8501 or next available
+streamlit run frontend/app.py
 ```
 
 Navigate to **http://localhost:8501** in your browser.
@@ -76,46 +76,66 @@ Navigate to **http://localhost:8501** in your browser.
 ## 💡 Example Questions
 
 - _"Which delivery routes have the highest delay rate?"_
-- _"Which product categories generate the most revenue but also experience the highest late delivery risk?"_
+- _"Which product categories generate the most revenue?"_
 - _"What is the average delivery time per city?"_
 - _"Which shipping mode has the worst late delivery rate?"_
-- _"Which regions have the most canceled orders?"_
+- _"Show me the top 10 customers by order value"_
+
+## 🤖 ML Delay Prediction
+The platform includes an **XGBoost-powered predictive engine** that estimates the probability of delivery delays based on real-time factors.
+
+### Features:
+- **Real-time Inference**: Predict delays using factors like distance, shipping mode, traffic level, and driver experience.
+- **One-Click Training**: Re-train the model directly from the UI or via the `/train-model` API endpoint using current database records.
+- **Accuracy Metrics**: View model performance (RMSE, MAE) after training.
+
+### How to use:
+1. Navigate to the **"Delivery Delay Prediction"** tab in the Sidebar.
+2. Adjust the sliders and inputs for shipment parameters.
+3. Click **"Predict Delay Probability"** to see the AI's estimation and confidence level.
 
 ## 📂 Project Structure
 
 ```text
 logistics_sql_agent/
-├── app.py                   # Streamlit frontend
-├── main.py                  # FastAPI entry point
-├── requirements.txt         # Python dependencies
+├── backend/                 # All backend logic
+│   ├── main.py              # FastAPI entry point
+│   ├── api/
+│   │   └── routes.py        # FastAPI endpoints
+│   ├── agents/
+│   │   ├── sql_agent.py     # SQL generation logic
+│   │   └── query_planner.py # Query planning logic
+│   ├── database/
+│   │   ├── db_connection.py # DB engine
+│   │   ├── schema_loader.py # Schema introspection
+│   │   ├── create_tables.py # DDL setup
+│   │   └── ingest_data.py   # Data ingestion
+│   ├── analytics/
+│   │   ├── insights.py      # LLM insights
+│   │   ├── visualizations.py# Plotly charts
+│   │   └── dashboard.py     # Global metrics Calculation
+│   ├── ml/
+│   │   └── delay_prediction.py # ML model
+│   ├── utils/
+│   │   └── query_validator.py # SQL validation
+│   └── __init__.py
+├── frontend/
+│   └── app.py               # Streamlit UI
+├── data/                    # Datasets
+├── tests/                   # Unit tests
+├── requirements.txt         # Project dependencies
 ├── .env                     # Credentials (git-ignored)
-├── data/
-│   └── DataCoSupplyChainDataset.csv
-├── api/
-│   └── routes.py            # FastAPI endpoints
-├── agents/
-│   ├── sql_agent.py         # Prompt engineering & execution for SQL Agent
-│   └── query_planner.py     # Request parsing and planning
-├── database/
-│   ├── db_connection.py     # SQLAlchemy engine setup
-│   ├── create_tables.py     # DDL script for DB normalization
-│   └── ingest_data.py       # Data mapping & CSV ingestion script
-├── analytics/
-│   ├── insights.py          # LangChain-powered business insights
-│   └── visualizations.py    # Auto-generates Plotly charts
-├── ml/
-│   └── delay_prediction.py  # XGBoost delivery delay predictor
-└── utils/
-    └── query_validator.py   # SQL syntax and table validation
+└── README.md
 ```
 
 ## 🔌 API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/health` | API and Database Health check |
+| `GET` | `/health` | API, Database, and Model status |
+| `GET` | `/dashboard-metrics` | Dynamic global logistics metrics |
 | `GET` | `/schema` | Introspect database schema |
-| `POST` | `/query` | Processes Natural Language → SQL → Results |
+| `POST` | `/query` | Natural Language → SQL → Results |
 | `GET` | `/sample-questions` | Retrieves example questions |
 | `POST` | `/predict-delay` | ML Delay prediction inference |
 | `POST` | `/train-model` | Trains the XGBoost delay model |

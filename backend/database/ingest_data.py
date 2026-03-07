@@ -8,7 +8,7 @@ import sys
 import pandas as pd
 import numpy as np
 from sqlalchemy import text
-from database.db_connection import get_engine
+from backend.database.db_connection import get_engine
 from datetime import datetime, timedelta
 import random
 

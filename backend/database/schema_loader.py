@@ -4,7 +4,7 @@ Loads database schema dynamically for LLM context.
 """
 from inspect import signature
 from sqlalchemy import inspect, text
-from database.db_connection import get_engine
+from backend.database.db_connection import get_engine
 
 
 def get_schema_string() -> str:

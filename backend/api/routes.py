@@ -12,13 +12,14 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from agents.sql_agent import get_agent
-from agents.query_planner import plan_query, is_followup_question
-from database.schema_loader import get_schema_string, get_schema_dict
-from analytics.insights import generate_insight
-from analytics.visualizations import auto_visualize
-from ml.delay_prediction import predict_delay, train_model, model_is_trained
-from database.db_connection import test_connection
+from backend.agents.sql_agent import get_agent
+from backend.agents.query_planner import plan_query, is_followup_question
+from backend.database.schema_loader import get_schema_string, get_schema_dict
+from backend.analytics.insights import generate_insight
+from backend.analytics.visualizations import auto_visualize
+from backend.ml.delay_prediction import predict_delay, train_model, model_is_trained
+from backend.database.db_connection import test_connection
+from backend.analytics.dashboard import get_dashboard_metrics
 
 router = APIRouter()
 
@@ -159,7 +160,7 @@ async def run_query(req: QueryRequest):
 
         # Store in permanent memory
         if req.session_id:
-            from database.db_connection import get_async_engine
+            from backend.database.db_connection import get_async_engine
             from sqlalchemy import text
             engine = get_async_engine()
             async with engine.begin() as conn:
@@ -203,6 +204,14 @@ async def train_model_endpoint():
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
         return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dashboard-metrics")
+async def dashboard_metrics():
+    try:
+        return get_dashboard_metrics()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

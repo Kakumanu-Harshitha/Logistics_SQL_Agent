@@ -10,7 +10,7 @@ import pandas as pd
 from typing import Dict, Optional, Tuple
 from sqlalchemy import text
 
-from database.db_connection import get_engine
+from backend.database.db_connection import get_engine
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "delay_model.pkl")
 

@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 import pandas as pd
 from sqlalchemy import text
 
-from database.db_connection import get_engine
-from database.schema_loader import get_semantic_schema_string, get_table_names
-from utils.query_validator import validate_sql, clean_sql
+from backend.database.db_connection import get_engine
+from backend.database.schema_loader import get_semantic_schema_string, get_table_names
+from backend.utils.query_validator import validate_sql, clean_sql
 import logging
 
 logger = logging.getLogger(__name__)
@@ -150,7 +150,7 @@ Generate the correct PostgreSQL SQL query. Only return the SQL query, no explana
 
     async def load_history_from_db(self, session_id: str):
         """Load past questions and SQL answers from the database for context."""
-        from database.db_connection import get_async_engine
+        from backend.database.db_connection import get_async_engine
         engine = get_async_engine()
         self.conversation_history = []
         self.current_session_id = session_id
@@ -186,7 +186,7 @@ Please fix the SQL query. Return only the corrected SQL, no explanation."""
 
     async def execute_query(self, sql: str) -> pd.DataFrame:
         """Execute SQL and return a Pandas DataFrame with a strict hard limit asynchronously."""
-        from database.db_connection import get_async_engine
+        from backend.database.db_connection import get_async_engine
         engine = get_async_engine()
         async with engine.connect() as conn:
             result = await conn.execute(text(sql))

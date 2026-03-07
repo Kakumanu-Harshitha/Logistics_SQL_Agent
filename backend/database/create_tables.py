@@ -4,7 +4,7 @@ Creates all tables in PostgreSQL for the DataCo Supply Chain dataset.
 Run this ONCE before ingesting data.
 """
 from sqlalchemy import text
-from database.db_connection import get_async_engine
+from backend.database.db_connection import get_async_engine
 import sys
 
 
