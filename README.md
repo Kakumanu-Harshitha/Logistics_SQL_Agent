@@ -140,3 +140,18 @@ logistics_sql_agent/
 | `POST` | `/predict-delay` | ML Delay prediction inference |
 | `POST` | `/train-model` | Trains the XGBoost delay model |
 | `POST` | `/clear-history` | Resets the conversation memory |
+## Model Performance
+
+The delivery delay prediction model was evaluated using standard classification metrics.
+
+| Metric | Value | Description |
+|------|------|-------------|
+| Accuracy | **74.6%** | Overall correctness of predictions |
+| Recall | **89.9%** | Ability to correctly identify late deliveries |
+| F1-Score | **80.3%** | Balance between precision and recall |
+| Optimal Threshold | **0.4939** | Best probability threshold for classification |
+
+**Key Insight:**  
+The model achieves a high **recall of 89.9%**, making it highly effective at detecting potential late deliveries and enabling proactive logistics planning.
+# Owner
+[Kakumanu Harshitha](https://github.com/Kakumanu-Harshitha)
