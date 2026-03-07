@@ -267,6 +267,13 @@ def get_metrics():
     except Exception:
         return None
 
+def predict_delay_api(params: dict):
+    try:
+        r = requests.post(f"{API_BASE}/predict-delay", json=params, timeout=10)
+        return r.json() if r.status_code == 200 else {"error": r.text}
+    except Exception as e:
+        return {"error": str(e)}
+
 # ─── Main UI Context ─────────────────────────────────────────────────────────────
 
 # Header
@@ -485,17 +492,44 @@ with side_col:
         
         pk_col1, pk_col2 = st.columns(2)
         with pk_col1:
-            dist = st.number_input("DISTANCE (KM)", value=450)
-            traffic = st.selectbox("TRAFFIC LEVEL", ["Low", "Medium", "High"])
-            exp = st.number_input("DRIVER EXPERIENCE (YRS)", value=3)
+            dist = st.number_input("DISTANCE (KM)", value=450, min_value=1)
+            traffic = st.selectbox("TRAFFIC LEVEL", ["Low", "Medium", "High", "Very High"])
+            exp = st.number_input("DRIVER EXP (YRS)", value=3, min_value=0)
+            hour = st.slider("HOUR OF DAY", 0, 23, 12)
         with pk_col2:
-            days = st.number_input("SCHEDULED DAYS", value=5)
-            mode = st.selectbox("SHIPPING MODE", ["Ground", "Air", "Ocean"])
-            rating = st.number_input("DRIVER RATING", value=4.2)
+            days = st.number_input("SCHEDULED DAYS", value=5, min_value=1)
+            mode = st.selectbox("SHIPPING MODE", ["Standard Class", "First Class", "Second Class", "Same Day"])
+            rating = st.number_input("DRIVER RATING", value=4.2, min_value=1.0, max_value=5.0)
+            dow = st.selectbox("DAY OF WEEK", options=[0,1,2,3,4,5,6], format_func=lambda x: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][x])
         
         st.markdown('<div class="predict-btn">', unsafe_allow_html=True)
         if st.button("Predict Delay Risk"):
-            st.info("Calculating risk...")
+            params = {
+                "distance_km": float(dist),
+                "days_scheduled": int(days),
+                "traffic_level": traffic,
+                "shipping_mode": mode,
+                "experience_years": int(exp),
+                "rating": float(rating),
+                "hour_of_day": int(hour),
+                "day_of_week": int(dow)
+            }
+            with st.spinner("Analyzing..."):
+                res = predict_delay_api(params)
+                if "error" in res:
+                    st.error(f"Prediction failed: {res['error']}")
+                else:
+                    risk = res.get("risk_label", "UNKNOWN")
+                    prob = res.get("delay_chance_pct", 0)
+                    color = "#f87171" if risk == "HIGH RISK" else "#4ade80"
+                    
+                    st.markdown(f"""
+                    <div style="background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 8px; border: 1px solid var(--border); margin-top: 10px;">
+                        <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">PREDICTED RISK</p>
+                        <p style="font-size: 1.25rem; font-weight: 700; color: {color}; margin: 5px 0;">{risk}</p>
+                        <p style="font-size: 0.875rem; color: #f8fafc; margin: 0;">Probability: {prob}%</p>
+                    </div>
+                    """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ─── Execution ───
