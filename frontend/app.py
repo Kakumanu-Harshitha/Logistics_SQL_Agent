@@ -255,21 +255,24 @@ def check_api_health():
 def run_query(question: str):
     payload = {"question": question, "session_id": st.session_state.session_id}
     try:
-        r = requests.post(f"{API_BASE}/query", json=payload, timeout=60)
+        # Increased timeout to 120s for slow SQL execution or cold starts
+        r = requests.post(f"{API_BASE}/query", json=payload, timeout=120)
         return r.json() if r.status_code == 200 else {"error": r.text}
     except Exception as e:
         return {"error": str(e)}
 
 def get_metrics():
     try:
-        r = requests.get(f"{API_BASE}/dashboard-metrics", timeout=5)
+        r = requests.get(f"{API_BASE}/dashboard-metrics", timeout=30)
         return r.json() if r.status_code == 200 else None
     except Exception:
         return None
 
 def predict_delay_api(params: dict):
     try:
-        r = requests.post(f"{API_BASE}/predict-delay", json=params, timeout=10)
+        # Increased timeout to 60s because Render free-tier spins down 
+        # and can take 30-50 seconds to wake up!
+        r = requests.post(f"{API_BASE}/predict-delay", json=params, timeout=60)
         return r.json() if r.status_code == 200 else {"error": r.text}
     except Exception as e:
         return {"error": str(e)}
