@@ -13,7 +13,7 @@ import time
 import uuid
 
 # ─── Configuration ──────────────────────────────────────────────────────────────
-API_BASE = "http://localhost:8000"
+API_BASE = "https://logistics-sql-agent.onrender.com"
 
 st.set_page_config(
     page_title="Logistics Insight AI",
