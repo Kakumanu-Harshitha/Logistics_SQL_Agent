@@ -3,11 +3,12 @@ database/create_tables.py
 Creates all tables in PostgreSQL for the DataCo Supply Chain dataset.
 Run this ONCE before ingesting data.
 """
+import os
 from sqlalchemy import text
-from backend.database.db_connection import get_async_engine
+from backend.database.db_connection import get_engine
 import sys
 
-
+# DDL same as above
 DDL = """
 -- Drop existing tables in reverse dependency order
 DROP TABLE IF EXISTS deliveries CASCADE;
@@ -111,14 +112,15 @@ CREATE TABLE chats (
 );
 """
 
-
-import asyncio
-
-async def create_tables():
-    engine = get_async_engine()
-    async with engine.begin() as conn:
-        await conn.execute(text(DDL))
+def create_tables():
+    engine = get_engine()
+    
+    with engine.begin() as conn:
+        statements = [s.strip() for s in DDL.split(';') if s.strip()]
+        for statement in statements:
+            conn.execute(text(statement))
+            
     print("✅ All tables created successfully.")
 
 if __name__ == "__main__":
-    asyncio.run(create_tables())
+    create_tables()
